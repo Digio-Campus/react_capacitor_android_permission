@@ -1,70 +1,28 @@
-# Getting Started with Create React App
+Pequeño ejemplo para ver cómo se pueden solicitar permisos exclusivos de android y de PWA desde un aplicación React con Capacitor.
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+	1. Primero ejecutamos "npx create-react-app react_capacitor_android_permissions" para crear un proyecto React desde 0. Este comando ya no se suele utilizar pero nos puede servir perfectamente para aprender el uso de los permisos.
 
-## Available Scripts
+	2. Instalamos las dependencias necesarias con "npm install @capacitor/core @capacitor/cli @capacitor/android". Inicializamos Capacitor con "npx cap init" y añadimos android con "npx cap add android". Hacemos el build con "npm run build" y sincronizamos con "npx cap sync". Cuando queramos ejecutar el proyecto en android haremos "npx cap run android".
 
-In the project directory, you can run:
+	3. Vamos a empezar solicitando un permiso propio de entorno web. Primero creamos la clase "WebGeolocationPermission" que hereda de WebPlugin. En esta clase ponemos el método requestPermission(). En este método primero haremos navigator.permissions.query({name: 'geolocation'}) para comprobar si el permiso "geolocation" ya está aceptado. Si no lo está llamaremos a navigator.geolocation.getCurrentPosition() para solicitar el permiso al usuario.
 
-### `npm start`
+	4. En App.js ponemos un botón al que asociamos un evento que utilice nuestro plugin para llamar a requestPermission() y un texto debajo donde mostraremos la altitud y latitud. Tras esto hacemos un build y ejecutamos "npm run start" para comprobar que funciona correctamente en el navegador.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+	5. Ahora vamos a implementar solicitud de permisos en Android desde una vista React. Primero debemos incluir en el Manifest el permiso para usar la cámara.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+	6. Después creamos en el directorio donde se encuentra MainActivity.java un fichero CameraPermissionPlugin.java. La clase CameraPermissionPlugin debe heredar de Plugin y tener una anotación @CapacitorPlugin que incluya el nombre y los permisos.
 
-### `npm test`
+	7. Es importante que los métodos que queremos exponer a través del plugin tengan la anotación @PluginMethod. Además podemos usar las anotaciones @PermissionCallback y @ActivityCallback si necesitamos un método de callback para comprobar los permisos o para lanzar Activities. 
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+	8. En MainActivity debemos registrar el plugin antes de la llamada a super.onCreate().
 
-### `npm run build`
+	9. Ahora volvemos al directorio src/ donde se encuentra App.js y creamos un nuevo fichero "PluginBridge.js"que servirá como puente para el plugin entre la parte de Android y la parte de React. Llamamos al método registerPlugin() pasándole el nombre que hemos puesto a nuestro plugin en Android.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+	10. Por último importamos el plugin en App.js y utilizamos su método takePhoto() para solicitar el permiso de la cámara.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+	11. Debemos tener en cuenta que si nuestro proyecto apunta a una API de nivel 30 o superior tendremos que incluir en el AndroidManifest.xml este código: 
+"<queries>
+        <intent>
+            <action android:name="android.media.action.IMAGE_CAPTURE" />
+        </intent>
+ </queries>"
